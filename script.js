@@ -1,29 +1,36 @@
+const layers = [
+  "Applications",
+  "Data",
+  "Runtime",
+  "Middleware",
+  "Operating System",
+  "Virtualization",
+  "Servers",
+  "Storage",
+  "Networking",
+];
+
+const sections = window.studyGuide.sections;
+const finalExam = window.studyGuide.finalExam;
+
 const scoreState = {
   total: 0,
   correct: 0,
   answered: new Set(),
 };
 
-function renderNav() {
-  const nav = document.querySelector("#mainNav");
-  nav.innerHTML =
-    window.studyGuide.sections
-      .map((section) => `<a href="#${section.id}">${section.nav}</a>`)
-      .join("") + `<a href="#final-exam">מבחן מסכם</a><a href="#coverage-check">כיסוי</a>`;
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
 }
 
-function renderLearningMap() {
-  const root = document.querySelector("#learningMap");
-  root.innerHTML = window.studyGuide.sections
-    .map(
-      (section, index) => `
-        <a class="map-card" href="#${section.id}">
-          <strong>${index + 1}. ${section.title}</strong>
-          <span>${section.quiz.length} שאלות ביניים</span>
-        </a>
-      `,
-    )
-    .join("");
+function renderNav() {
+  const nav = document.querySelector("#mainNav");
+  nav.innerHTML = sections
+    .map((section) => `<a href="#${section.id}">${section.nav}</a>`)
+    .join("") + `<a href="#final-exam">מבחן מסכם</a>`;
 }
 
 function renderBlocks(blocks) {
@@ -108,6 +115,46 @@ function renderBlock(block) {
     `;
   }
 
+  if (block.type === "figure") {
+    return `
+      <figure class="content-block figure-block">
+        <h3 class="block-title">${block.title}</h3>
+        <div class="figure-frame">
+          <img src="${block.image}" alt="${block.alt || block.title}" loading="lazy" />
+        </div>
+        ${block.caption ? `<figcaption>${block.caption}</figcaption>` : ""}
+        ${block.note ? `<p class="figure-note">${block.note}</p>` : ""}
+      </figure>
+    `;
+  }
+
+  if (block.type === "responsibility") {
+    return `
+      <article class="content-block diagram">
+        <h3 class="block-title">${block.title}</h3>
+        <div class="responsibility-legend">
+          <span class="legend-item"><span class="legend-swatch" style="background: var(--orange)"></span> מנוהל על ידי הלקוח</span>
+          <span class="legend-item"><span class="legend-swatch" style="background: var(--blue)"></span> מנוהל על ידי הספק</span>
+        </div>
+        <div class="responsibility-grid">
+          ${block.columns
+            .map(
+              (col) => `
+                <section class="responsibility-col">
+                  <h3>${col.title}</h3>
+                  ${layers
+                    .map((layer, index) => `<div class="layer ${index >= col.vendorFrom ? "vendor" : "user"}">${layer}</div>`)
+                    .join("")}
+                  <p class="info-card">${col.note}</p>
+                </section>
+              `,
+            )
+            .join("")}
+        </div>
+      </article>
+    `;
+  }
+
   if (block.type === "serviceMatrix") {
     return `
       <article class="content-block">
@@ -162,21 +209,22 @@ function renderQuestion(question, id) {
           .join("")}
       </div>
       <div class="feedback"><strong></strong><span></span></div>
-      <template>${question.explain}</template>
+      <template data-correct-answer>${question.a[question.correct]}</template>
+      <template data-explanation>${question.explain}</template>
     </article>
   `;
 }
 
 function renderSections() {
   const root = document.querySelector("#sectionsRoot");
-  root.innerHTML = window.studyGuide.sections
+  root.innerHTML = sections
     .map(
-      (section, index) => `
+      (section) => `
         <section id="${section.id}" class="section-shell">
           <div class="section-heading">
             <span class="section-icon">${section.icon}</span>
             <div>
-              <p class="eyebrow">פרק ${index + 1}</p>
+              <p class="eyebrow">פרק ${sections.indexOf(section) + 1}</p>
               <h2>${section.title}</h2>
             </div>
           </div>
@@ -191,27 +239,18 @@ function renderSections() {
 
 function renderFinalExam() {
   const root = document.querySelector("#finalExamRoot");
-  root.innerHTML = window.studyGuide.finalExam
-    .map((question, index) => renderQuestion(question, `final-${index}`))
-    .join("");
-}
-
-function renderCoverage() {
-  const root = document.querySelector("#coverageRoot");
-  root.innerHTML = `
-    <div class="coverage-checklist">
-      ${window.studyGuide.coverageItems.map((item) => `<span>✓ ${item}</span>`).join("")}
-    </div>
-  `;
+  root.innerHTML = finalExam.map((question, index) => renderQuestion(question, `final-${index}`)).join("");
 }
 
 function updateCounters() {
-  const quizTotal = window.studyGuide.sections.reduce((sum, section) => sum + section.quiz.length, 0);
-  document.querySelector("#sectionCount").textContent = String(window.studyGuide.sections.length);
+  const quizTotal = sections.reduce((sum, section) => sum + section.quiz.length, 0);
+  document.querySelector("#sectionCount").textContent = String(sections.length);
   document.querySelector("#quizCount").textContent = String(quizTotal);
-  document.querySelector("#examCount").textContent = String(window.studyGuide.finalExam.length);
-  document.querySelector("#scoreCorrect").textContent = String(scoreState.correct);
-  document.querySelector("#scoreTotal").textContent = String(scoreState.total);
+  document.querySelector("#examCount").textContent = String(finalExam.length);
+  const scoreCorrect = document.querySelector("#scoreCorrect");
+  const scoreTotal = document.querySelector("#scoreTotal");
+  if (scoreCorrect) scoreCorrect.textContent = String(scoreState.correct);
+  if (scoreTotal) scoreTotal.textContent = String(scoreState.total);
 }
 
 function bindQuiz() {
@@ -226,7 +265,8 @@ function bindQuiz() {
       const feedback = card.querySelector(".feedback");
       const feedbackTitle = feedback.querySelector("strong");
       const feedbackText = feedback.querySelector("span");
-      const explanation = card.querySelector("template").innerHTML;
+      const correctAnswer = card.querySelector("template[data-correct-answer]").innerHTML;
+      const explanation = card.querySelector("template[data-explanation]").innerHTML;
 
       card.querySelectorAll(".answer").forEach((button) => {
         button.classList.toggle("correct", Number(button.dataset.answer) === correct);
@@ -242,8 +282,8 @@ function bindQuiz() {
         if (selected === correct) scoreState.correct += 1;
       }
 
-      feedbackTitle.textContent = selected === correct ? "נכון. " : "לא נכון. ";
-      feedbackText.textContent = explanation;
+      feedbackTitle.textContent = selected === correct ? "נכון." : "לא נכון.";
+      feedbackText.innerHTML = `התשובה הנכונה: ${correctAnswer}<br>${explanation}`;
       feedback.classList.add("visible");
       updateCounters();
     });
@@ -255,10 +295,9 @@ function bindTheme() {
   button.addEventListener("click", () => {
     const next = document.documentElement.dataset.theme === "dark" ? "" : "dark";
     document.documentElement.dataset.theme = next;
-    localStorage.setItem("cloud-study-theme-v2", next);
+    localStorage.setItem("cloud-study-theme", next);
   });
-
-  const saved = localStorage.getItem("cloud-study-theme-v2");
+  const saved = localStorage.getItem("cloud-study-theme");
   if (saved) document.documentElement.dataset.theme = saved;
 }
 
@@ -277,7 +316,7 @@ function bindScrollSpy() {
         });
       });
     },
-    { rootMargin: "-35% 0px -58% 0px", threshold: 0.01 },
+    { rootMargin: "-35% 0px -60% 0px", threshold: 0.01 },
   );
 
   targets.forEach((target) => observer.observe(target));
@@ -285,10 +324,8 @@ function bindScrollSpy() {
 
 function init() {
   renderNav();
-  renderLearningMap();
   renderSections();
   renderFinalExam();
-  renderCoverage();
   updateCounters();
   bindQuiz();
   bindTheme();
