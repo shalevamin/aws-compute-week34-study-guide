@@ -128,6 +128,10 @@ function renderBlock(block) {
     `;
   }
 
+  if (block.type === "html") {
+    return `<article class="content-block custom-html">${block.html}</article>`;
+  }
+
   if (block.type === "responsibility") {
     return `
       <article class="content-block diagram">

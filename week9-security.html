@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>יסודות מחשוב ענן - שבוע 9 Security</title>
+    <meta
+      name="description"
+      content="עמוד לימוד מלא לשבוע 9+10 בנושא Security ב-AWS: Firewall, NACL, Security Groups, DDoS, Shield, WAF, NAT Gateway ו-KMS."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23dc2626'/%3E%3Cpath d='M32 9l19 8v13c0 12-7 21-19 25-12-4-19-13-19-25V17z' fill='white'/%3E%3Cpath d='M32 17l11 5v9c0 7-4 12-11 15-7-3-11-8-11-15v-9z' fill='%23dc2626'/%3E%3C/svg%3E"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=IBM+Plex+Sans+Hebrew:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./week9-security.css" />
+  </head>
+  <body>
+    <header class="topbar" aria-label="ניווט ראשי">
+      <a class="brand" href="#top" aria-label="חזרה לראש העמוד">
+        <span class="brand-mark">SEC</span>
+        <span>
+          <strong>יסודות מחשוב ענן</strong>
+          <small>שבוע 9+10 | Security</small>
+        </span>
+      </a>
+      <nav id="mainNav" class="nav-tabs" aria-label="נושאי לימוד"></nav>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="מצב כהה / בהיר">◐</button>
+    </header>
+
+    <main id="top">
+      <section class="hero security-hero">
+        <div class="hero-content">
+          <p class="course-label">עמוד לימוד מלא לפי מצגת שבוע 9+10, בלי להפוך את השקופיות לצילומי מסך</p>
+          <h1>Security ב-AWS בלי לפספס אף שכבת הגנה</h1>
+          <p class="hero-copy">
+            כאן מרוכז כל החומר מהמצגת: חומת אש כללית, <span dir="ltr">NACL</span>,
+            <span dir="ltr">Security Groups</span>, ההבדל בין
+            <span dir="ltr">Stateless</span> ל־<span dir="ltr">Stateful</span>,
+            התקפות <span dir="ltr">DDoS</span>, ההבדל בין
+            <span dir="ltr">AWS Shield</span> ל־<span dir="ltr">AWS WAF</span>,
+            <span dir="ltr">NAT Gateway</span>, ו־<span dir="ltr">KMS</span> כולל
+            מחזור חיי מפתחות ו־<span dir="ltr">Envelope Encryption</span>.
+          </p>
+          <div class="hero-actions" aria-label="פעולות מהירות">
+            <a class="button primary" href="#security-overview">להתחיל ללמוד</a>
+            <a class="button secondary" href="#final-exam">לעבור למבחן המסכם</a>
+          </div>
+          <div class="coverage-strip" aria-label="כיסוי חומר">
+            <span><strong id="sectionCount">0</strong> פרקים</span>
+            <span><strong id="quizCount">0</strong> שאלות ביניים</span>
+            <span><strong id="examCount">0</strong> שאלות מסכמות</span>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <img src="./assets/week9/security-hero.png" alt="" />
+          <div class="hero-note-card">
+            <strong>מפת שכבות מהירה</strong>
+            <ul>
+              <li><span dir="ltr">NACL</span>: גבול ה־Subnet, ללא שמירת מצב.</li>
+              <li><span dir="ltr">Security Group</span>: גבול המשאב, עם שמירת מצב.</li>
+              <li><span dir="ltr">WAF + Shield</span>: הגנה על Web ועל זמינות.</li>
+              <li><span dir="ltr">KMS</span>: הצפנה, מפתחות, הרשאות וביקורת.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="notice-band" aria-labelledby="coverage-title">
+        <div>
+          <h2 id="coverage-title">איך נבנה העמוד הזה</h2>
+          <p>
+            המצגת חולצה ורונדרה, וכל השקופיות החשודות כתמונה בלבד תורגמו לטקסט,
+            טבלאות ותרשימי HTML. לכן לא צריך לפתוח כרטיסיות או ללחוץ כדי לראות חומר:
+            גוללים ורואים את הכל. רק פתרונות לשאלות נשארים מוסתרים עד בחירה.
+          </p>
+        </div>
+        <a class="text-link" href="#coverage-check">לבדיקת כיסוי מלאה</a>
+      </section>
+
+      <aside class="floating-score" aria-live="polite">
+        <span>ניקוד שאלות</span>
+        <strong><span id="scoreCorrect">0</span>/<span id="scoreTotal">0</span></strong>
+      </aside>
+
+      <section class="quick-map" aria-labelledby="map-title">
+        <h2 id="map-title">מפת לימוד מהירה</h2>
+        <div class="map-grid">
+          <a href="#security-overview">1. מבוא ויעדי השיעור</a>
+          <a href="#firewall-basics">2. חומת אש</a>
+          <a href="#nacl">3. Network ACL</a>
+          <a href="#security-groups">4. Security Groups</a>
+          <a href="#stateful-stateless">5. Stateful מול Stateless</a>
+          <a href="#ddos">6. DDoS</a>
+          <a href="#shield">7. AWS Shield</a>
+          <a href="#waf">8. AWS WAF</a>
+          <a href="#nat-gateway">9. NAT Gateway</a>
+          <a href="#kms">10. KMS</a>
+          <a href="#summary">11. סיכום שכבות</a>
+        </div>
+      </section>
+
+      <div id="sectionsRoot" class="sections-root"></div>
+
+      <section id="final-exam" class="final-exam section-shell">
+        <div class="section-heading">
+          <span class="section-icon">◎</span>
+          <div>
+            <p class="eyebrow">מבחן מסכם לשבוע 9+10</p>
+            <h2>חיבור כל שכבות האבטחה</h2>
+          </div>
+        </div>
+        <p class="section-intro">
+          השאלות כאן משלבות בין NACL, Security Groups, DDoS, Shield, WAF,
+          NAT Gateway ו־KMS. הפתרון וההסבר יוצגו רק אחרי בחירה.
+        </p>
+        <div id="finalExamRoot" class="quiz-list"></div>
+      </section>
+
+      <section id="coverage-check" class="section-shell appendix">
+        <div class="section-heading">
+          <span class="section-icon">✅</span>
+          <div>
+            <p class="eyebrow">בקרת כיסוי</p>
+            <h2>כל הנושאים שנכנסו לעמוד</h2>
+          </div>
+        </div>
+        <p class="section-intro">
+          הרשימה הזאת נועדה לוודא שלא נשארו מושגים, טבלאות, שאלות דוגמה או תרשימי תהליך
+          מהמצגת בלי מענה בתוך האתר.
+        </p>
+        <ul class="coverage-checklist">
+          <li>יעדי השיעור: NACL, Security Groups, NAT, DDoS, WAF, KMS</li>
+          <li>חזרה על VPC, Subnets, VPC Peering, Transit Gateway, PrivateLink ו־VPN</li>
+          <li>חומת אש, Rules, Allow, Deny/Reject, מקור, יעד, פורט ופרוטוקול</li>
+          <li>NACL כחומת אש סטטית ברמת Subnet</li>
+          <li>סדר כללים ב־NACL ו־Allow/Deny</li>
+          <li>Default NACL: Inbound ו־Outbound פתוחים, עם Deny סופי</li>
+          <li>Custom NACL: תעבורה חסומה עד להגדרת כללים</li>
+          <li>Stateless packet filtering ודוגמת הבקשה/תגובה</li>
+          <li>Security Group כחומת אש ברמת משאב או Instance</li>
+          <li>Security Group Stateful והחזרת תגובה ללא כלל Inbound חדש</li>
+          <li>SG על EC2, RDS ו־EBS</li>
+          <li>ברירות מחדל של SG ותעבורה בתוך הקבוצה עצמה</li>
+          <li>טבלת NACL מול SG: Inbound, Outbound, Default, Custom, State</li>
+          <li>שאלות בדיקת ידע מהמצגת ופתרונותיהן</li>
+          <li>שאלת מבחן לדוגמה על Default NACL</li>
+          <li>DoS ו־DDoS, בוטים, הצפה ושלילת שירות</li>
+          <li>Volumetric, Protocol ו־Application Layer attacks</li>
+          <li>AWS Shield Standard מול Shield Advanced</li>
+          <li>Shield tiers: ניטור, L3/L4, DRT, cost protection, Layer 7 anomaly</li>
+          <li>AWS WAF כ־Web Application Firewall ברמת L7</li>
+          <li>Web ACL, Rule groups, Priority ו־Managed Rules</li>
+          <li>SQL Injection, XSS, Rate Limiting וחסימה לפי IP</li>
+          <li>WAF על ALB, API Gateway, CloudFront, AppSync ו־Cognito User Pool</li>
+          <li>WAF לא תומך ב־Network Load Balancer; שימוש ב־Global Accelerator ל־IP קבוע</li>
+          <li>השוואת Shield מול WAF</li>
+          <li>NAT Gateway, Private Subnet, Public Subnet, EIP ו־Route Tables</li>
+          <li>תרשים NAT הישן וזרימת NAT Gateway הנוכחית</li>
+          <li>KMS, הצפנה במנוחה והצפנה במעבר</li>
+          <li>יצירה או יבוא מפתחות, BYOK, Key Policy, IAM, CloudTrail</li>
+          <li>HSMs ו־FIPS 140-3 Level 3</li>
+          <li>Envelope Encryption, Data Key מוצפן ולא מוצפן</li>
+          <li>מחזור חיי מפתחות: Create, Store, Encrypt/Decrypt, Integrate, Manage, IAM</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>נבנה כעמוד לימוד סטטי לפרסום פשוט ב־GitHub Pages, על בסיס מצגת שבוע 9+10 Security והתרשימים שבה.</p>
+    </footer>
+
+    <script src="./week9-security-data.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
