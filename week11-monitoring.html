@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>יסודות מחשוב ענן - שבוע 11 ניטור ובקרה</title>
+    <meta
+      name="description"
+      content="עמוד לימוד מלא לשבוע 11 בנושא ניטור, בקרה, לוגים והתראות ב-AWS: CloudTrail, Inspector, GuardDuty, CloudWatch, Config, Security Hub ו-SNS."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230891b2'/%3E%3Cpath d='M14 42h36v6H14zM18 32h6v8h-6zm11-12h6v20h-6zm11 7h6v13h-6z' fill='white'/%3E%3Ccircle cx='20' cy='19' r='5' fill='%23cffafe'/%3E%3Cpath d='M24 22l7 5' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=IBM+Plex+Sans+Hebrew:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./week11-monitoring.css" />
+  </head>
+  <body>
+    <header class="topbar" aria-label="ניווט ראשי">
+      <a class="brand" href="#top" aria-label="חזרה לראש העמוד">
+        <span class="brand-mark">OBS</span>
+        <span>
+          <strong>יסודות מחשוב ענן</strong>
+          <small>שבוע 11 | ניטור ובקרה</small>
+        </span>
+      </a>
+      <nav id="mainNav" class="nav-tabs" aria-label="נושאי לימוד"></nav>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="מצב כהה / בהיר">◐</button>
+    </header>
+
+    <main id="top">
+      <section class="hero monitoring-hero">
+        <div class="hero-content">
+          <p class="course-label">עמוד לימוד מלא לפי מצגת שבוע 11, בלי להפוך שקופיות לצילומי מסך</p>
+          <h1>ניטור, בקרה, לוגים והתראות ב-AWS</h1>
+          <p class="hero-copy">
+            כאן מרוכז כל החומר מהמצגת: למה בכלל מנטרים בענן, איך אוספים ומנתחים נתונים,
+            איך <span dir="ltr">CloudTrail</span> מתעד פעולות, מה בודקים
+            <span dir="ltr">Inspector</span> ו־<span dir="ltr">GuardDuty</span>,
+            איך <span dir="ltr">CloudWatch</span> מציג מדדים והתראות, מה תפקיד
+            <span dir="ltr">AWS Config</span>, איך <span dir="ltr">Security Hub</span>
+            מרכז ממצאים, ואיך <span dir="ltr">SNS</span> מפיץ הודעות בזמן אמת.
+          </p>
+          <div class="hero-actions" aria-label="פעולות מהירות">
+            <a class="button primary" href="#monitoring-overview">להתחיל ללמוד</a>
+            <a class="button secondary" href="#final-exam">לעבור למבחן המסכם</a>
+          </div>
+          <div class="coverage-strip" aria-label="כיסוי חומר">
+            <span><strong id="sectionCount">0</strong> פרקים</span>
+            <span><strong id="quizCount">0</strong> שאלות ביניים</span>
+            <span><strong id="examCount">0</strong> שאלות מסכמות</span>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <img src="./assets/week11/monitoring-hero.png" alt="" />
+          <div class="hero-note-card">
+            <strong>הקו המנחה של השיעור</strong>
+            <ul>
+              <li>מי עשה פעולה, מתי, מאיפה ועל איזה משאב?</li>
+              <li>האם יש פגיעות, איום, חריגה או אי-עמידה במדיניות?</li>
+              <li>איך הופכים ממצא להתראה ולתגובה?</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="notice-band" aria-labelledby="coverage-title">
+        <div>
+          <h2 id="coverage-title">איך נבנה העמוד הזה</h2>
+          <p>
+            ה־PDF חולץ לטקסט וגם רונדר לתמונות כדי לזהות שקופיות שהן בעיקר צילום מסך או תרשים.
+            הטבלאות, מסכי הדוגמה והתרשימים תורגמו כאן ל־HTML ולניסוח לימודי פתוח. אין כרטיסיות
+            שצריך לפתוח: גוללים ורואים את כל החומר. רק תשובות לשאלות מוסתרות עד שבוחרים תשובה.
+          </p>
+        </div>
+        <a class="text-link" href="#coverage-check">לבדיקת כיסוי מלאה</a>
+      </section>
+
+      <aside class="floating-score" aria-live="polite">
+        <span>ניקוד שאלות</span>
+        <strong><span id="scoreCorrect">0</span>/<span id="scoreTotal">0</span></strong>
+      </aside>
+
+      <section class="quick-map" aria-labelledby="map-title">
+        <h2 id="map-title">מפת לימוד מהירה</h2>
+        <div class="map-grid">
+          <a href="#monitoring-overview">1. מבוא ויעדי השיעור</a>
+          <a href="#monitoring-process">2. תהליך ניטור ובקרה</a>
+          <a href="#cloudtrail">3. CloudTrail</a>
+          <a href="#cloudtrail-deep-dive">4. Event History ו-Trail</a>
+          <a href="#inspector">5. Inspector</a>
+          <a href="#guardduty">6. GuardDuty</a>
+          <a href="#inspector-vs-guardduty">7. Inspector מול GuardDuty</a>
+          <a href="#cloudwatch">8. CloudWatch</a>
+          <a href="#config">9. AWS Config</a>
+          <a href="#security-hub">10. Security Hub</a>
+          <a href="#sns">11. SNS</a>
+          <a href="#alert-journey">12. מסע התראה מסכם</a>
+        </div>
+      </section>
+
+      <div id="sectionsRoot" class="sections-root"></div>
+
+      <section id="final-exam" class="final-exam section-shell">
+        <div class="section-heading">
+          <span class="section-icon">◎</span>
+          <div>
+            <p class="eyebrow">מבחן מסכם לשבוע 11</p>
+            <h2>חיבור כל שירותי הניטור, הבקרה וההתראות</h2>
+          </div>
+        </div>
+        <p class="section-intro">
+          השאלות כאן משלבות בין CloudTrail, Inspector, GuardDuty, CloudWatch,
+          AWS Config, Security Hub ו-SNS. הפתרון וההסבר יוצגו רק אחרי בחירה.
+        </p>
+        <div id="finalExamRoot" class="quiz-list"></div>
+      </section>
+
+      <section id="coverage-check" class="section-shell appendix">
+        <div class="section-heading">
+          <span class="section-icon">✓</span>
+          <div>
+            <p class="eyebrow">בקרת כיסוי</p>
+            <h2>כל הנושאים שנכנסו לעמוד</h2>
+          </div>
+        </div>
+        <p class="section-intro">
+          הרשימה הזאת נועדה לוודא שכל נושא, דוגמה, צילום מסך ותהליך שהופיעו במצגת
+          קיבלו ייצוג טקסטואלי או תרשים HTML בתוך העמוד.
+        </p>
+        <ul class="coverage-checklist">
+          <li>רשימת נושאי השיעור: CloudTrail, Inspector, GuardDuty, CloudWatch, Config, Security Hub ו-SNS</li>
+          <li>חשיבות ניטור ובקרה: זמינות, ביצועים, אבטחה, תאימות וניהול עלויות</li>
+          <li>תהליך ניטור: Data Collection, Analysis, Alerts, Reports/Dashboards ו-Automation</li>
+          <li>יתרונות שירותי ניטור AWS ואתגרי ענן: דינמיות, מורכבות וכמות נתונים גדולה</li>
+          <li>CloudTrail: מי ביצע קריאה, מתי, מאיפה, איזה שירות ומה הפעולה</li>
+          <li>Event History, מסך רשימת אירועים, דוגמת CreateSecurityGroup ופרטי אירוע</li>
+          <li>מבנה JSON של CloudTrail: userIdentity, eventTime, eventSource, eventName, sourceIPAddress ו-requestParameters</li>
+          <li>יצירת Trail, Multi-Region Trails, CLI/API, S3, CloudWatch Logs ו-Data Events</li>
+          <li>Inspector: ניהול פגיעויות, EC2, ECR, Lambda, CVE, CVSS והמלצות תיקון</li>
+          <li>GuardDuty: זיהוי איומים בזמן אמת ממקורות CloudTrail, VPC Flow Logs, DNS ועוד</li>
+          <li>השוואת Inspector מול GuardDuty: חולשות ידועות מול איומים והתנהגות חשודה</li>
+          <li>CloudWatch: Metrics, Logs, Alarms, Dashboards, Events, Lambda, SNS ו-SQS</li>
+          <li>AWS Config: מכונת זמן לתצורה, Rules, Compliance, Non-compliant ודוגמת פורט 22 פתוח לעולם</li>
+          <li>Security Hub: Single Pane of Glass, איסוף ממצאים, בדיקות תאימות, דוחות ואינטגרציות</li>
+          <li>SNS: Pub/Sub, Publisher, Topic, Subscribers, SQS, Lambda, Email, SMS ו-HTTP/S Webhooks</li>
+          <li>מסע התראה מסכם: אירוע, תיעוד, ריכוז, ניתוב והתראה</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>נבנה כעמוד לימוד סטטי לפרסום ב-GitHub Pages, על בסיס מצגת שבוע 11 בנושא ניטור, בקרה, לוגים והתראות.</p>
+    </footer>
+
+    <script src="./week11-monitoring-data.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
